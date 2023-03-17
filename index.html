@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #main {
+            width: 640px;
+            height: 480px;
+            margin: auto;
+            border: 1px solid black;;
+        }
+    </style>
+    <script>
+        var canvas;
+        var ctx; //uchwyt kontekstu tkaniny pozwalający na operowanie na niej
+        var axis, direction;
+        var pos_x = 320, pos_y = 300; //zmienne pozycji bohatera
+        var apple_x, apple_y;
+        var welcome_screen = true; // stan ekranu powitalnego
+        var width = 640, height = 480;
+        var isEaten;
+        /**
+        * funkcja rysująca bohatera na tkaninie
+        */
+        function draw_hero() {
+            ctx.save() //zachowanie stanu kontekstu
+            ctx.fillStyle = 'rgba(0, 255, 0, 1)'; //ustawienie koloru wypelnienia
+            
+            ctx.fillRect(pos_x,pos_y,10,10) //narysowanie bohatera
+            ctx.restore() //przywrocenie stanu kontekstu
+        }
+
+        function move_hero() {
+           eval("pos_" + axis + '+=' + direction) 
+        }
+
+        function draw_apple() {
+            ctx.save() 
+            ctx.fillStyle = 'rgba(255, 0, 0, 1)';
+            ctx.fillRect(apple_x, apple_y, 10, 10);
+        }
+
+        function generate_new_apple() {
+            apple_x = (Math.random()*width/10).toFixed(0)*10
+            apple_y = (Math.random()*height/10).toFixed(0)*10
+        }
+
+        function isEaten() {
+            return (apple_x == pos_x && apple_y == pos_y)
+        }
+
+        /**
+        *funkcja wywolywana cyklicznie przerysowujaca tkanine
+        */
+        function redraw() {
+            ctx.clearRect(0, 0, width, height) //czyszczenie tkaniny
+            move_hero()
+            draw_hero()
+            draw_apple()
+        }
+
+        /**
+        *funkcja inicjalizujaca gre i tworzaca ekran powitalny
+        */
+        function init() {
+            window.addEventListener("keydown", keyListener, false)
+                //skojarzenie funkcji obslugi klawiatury ze zdarzeniem
+            
+            canvas = document.getElementById('game')
+                //pobranie wskaznika na element tkaniny
+            width = canvas.width
+            height = canvas.height
+            axis = 'y'
+            direction = -10
+            ctx = canvas.getContext('2d')
+                //pobranie kontekstu grafiki 2d dla tkaniny
+
+            ctx.font = '48px sans-serif'
+            ctx.textAlign = 'center'
+                //ustawienie dla tkaniny kroju pisma i sposobu wyrownania tekstu
+        
+            ctx.fillText('Ready player one?', width/2, height/2)
+                //umieszczenie napisu naekranie powitalnym
+
+            draw_hero()
+        }
+
+        /**
+        *funkcja obslugi klawiatury
+        */
+        function keyListener(e) {
+            if(welcome_screen) { //jesli ekran powitalny to wyczysc
+                ctx.clearRect(0,0,width,height)
+                welcome_screen = false;
+                generate_new_apple()
+                window.setInterval(redraw, 1000) //podlaczenie funkcji przerysowania tkaniny
+            }
+            switch(e.keyCode) {
+                case 37: //strzalka w lewo
+                    pos_x-=10
+                    if(pos_x ==  -10) {pos_x = width-10;}
+                    break
+                case 38: //strzalka w gore
+                    pos_y-=10
+                    if(pos_y ==  -10) pos_y = height-10
+                    break
+                case 39: //strzalka w prawo
+                    pos_x+=10
+                    if(pos_x ==  width) pos_x = 0
+                    break
+                case 40: //strzalka w dol
+                    pos_y+=10
+                    if(pos_y ==  height) pos_y = 0
+                    break
+            }
+            if(isEaten()) {
+                generate_new_apple()
+                //TODO: make snake larger
+            }
+        }
+    </script>
+</head>
+<body onload="init()">
+    <div id="main">
+        <canvas id="game" width="640" height="480">
+
+        </canvas>
+    </div>
+</body>
+</html>
