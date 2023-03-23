@@ -12,13 +12,26 @@
       display: block;
       margin: auto;
     }
+    
+    div {
+      text-align: center;
+    }
+    
+    #score,
+    #reset {
+      margin: 20px;
+    }
   </style>
   <script type="module" src="script.js"></script>
 </head>
 
 <body>
   <div id="main">
-    <canvas id="game" width="200" height="200"> </canvas>
+    <div>
+      <span id="score"></span>
+      <button id="reset">Reset</button>
+    </div>
+    <canvas id="game" width="640" height="480"> </canvas>
   </div>
 </body>
 

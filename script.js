@@ -3,25 +3,35 @@ class Coordinates {
     this.x = x;
     this.y = y;
   }
+
+  equals(x, y) {
+    return x == this.x && y == this.y;
+  }
 }
 
 var canvas;
+var scoreDiv = document.getElementById('score');
+var timeout;
+var score;
 var ctx; //uchwyt kontekstu tkaniny pozwalający na operowanie na niej
-var axis, direction;
-var snake_coordinates = []
-var snake_x, snake_y; //zmienne pozycji bohatera
-var apple_x, apple_y;
+var axis, direction; //kierunek poruszania sie snake'a
+var snake_coordinates; //koordynaty snake'a
+var snake_x, snake_y; //zmienne pozycji glowy snake'a
+var apple_x, apple_y; //pozycja jablka
 var welcome_screen = true; // stan ekranu powitalnego
-var width, height;
+var width, height; // rozmiar canvas
 /**
  * funkcja rysująca bohatera na tkaninie
  */
 function draw_hero() {
   ctx.save() //zachowanie stanu kontekstu
   ctx.fillStyle = 'rgba(0, 255, 0, 1)'; //ustawienie koloru wypelnienia
+  ctx.strokeStyle = 'rgba(0, 100, 0, 1)'; // kolor obramowania
   for (let i = 0; i < snake_coordinates.length; i++) {
-    ctx.fillRect(snake_coordinates[i].x, snake_coordinates[i].y, 10, 10) //narysowanie bohatera
-  };
+    ctx.lineWidth = 1; // grubosc obramowania
+    ctx.fillRect(snake_coordinates[i].x, snake_coordinates[i].y, 10, 10) //narysowanie modulu weza
+    ctx.strokeRect(snake_coordinates[i].x, snake_coordinates[i].y, 10, 10) //obramowanie modulu weza
+  }
   ctx.restore() //przywrocenie stanu kontekstu
 }
 
@@ -36,15 +46,18 @@ function move_hero() {
   } else if (snake_y == height) {
     snake_y = 0
   }
-  if (snake_coordinates.some((element) => element.x == snake_x && element.y == snake_y)) {
-    window.alert("Game over") //TODO: game over screen with restart button
-  }
-  snake_coordinates.push(new Coordinates(snake_x, snake_y))
+  //FIXME: czasem nie generuje jablek po zjedzeniu
   if (!isEaten()) {
     snake_coordinates.shift();
   } else {
+    scoreDiv.innerHTML = "Score: " + ++score;
     generate_new_apple()
   }
+
+  if (snake_coordinates.some(coordinates => coordinates.equals(snake_x, snake_y))) { //FIXME: pozwala zawrocic jesli waz ma dlugosc 2
+    game_over()
+  }
+  snake_coordinates.push(new Coordinates(snake_x, snake_y))
 }
 
 function draw_apple() {
@@ -57,7 +70,7 @@ function generate_new_apple() {
   do {
     apple_x = (Math.random() * width / 10).toFixed(0) * 10
     apple_y = (Math.random() * height / 10).toFixed(0) * 10
-  } while (snake_coordinates.some((element) => element.x == apple_x && element.y == apple_y))
+  } while (snake_coordinates.some(coordinates => coordinates.equals(apple_x, apple_y)))
 }
 
 function isEaten() {
@@ -69,6 +82,7 @@ function isEaten() {
  */
 function redraw() {
   ctx.clearRect(0, 0, width, height) //czyszczenie tkaniny
+  timeout = window.setTimeout(redraw, 1000 - snake_coordinates.length * 5)
   move_hero()
   draw_hero()
   draw_apple()
@@ -86,12 +100,15 @@ function init() {
   width = canvas.width
   height = canvas.height
   snake_x = width / 2
-  snake_y = height / 2
+  snake_y = height / 2 + 50
+  snake_coordinates = []
   axis = 'y'
   direction = -10
+  score = 0
   ctx = canvas.getContext('2d')
     //pobranie kontekstu grafiki 2d dla tkaniny
 
+  ctx.clearRect(0, 0, width, height)
   ctx.font = '48px sans-serif'
   ctx.textAlign = 'center'
     //ustawienie dla tkaniny kroju pisma i sposobu wyrownania tekstu
@@ -101,6 +118,8 @@ function init() {
 
   snake_coordinates.push(new Coordinates(snake_x, snake_y))
   draw_hero()
+
+  scoreDiv.innerHTML = "Score: " + score;
 }
 
 /**
@@ -112,7 +131,7 @@ function keyListener(e) {
     welcome_screen = false;
     generate_new_apple()
     redraw()
-    window.setInterval(redraw, 1000) //podlaczenie funkcji przerysowania tkaniny
+      //window.setInterval(redraw, 1000) //podlaczenie funkcji przerysowania tkaniny
   }
   switch (e.keyCode) {
     case 37: //strzalka w lewo
@@ -134,4 +153,14 @@ function keyListener(e) {
   }
 }
 
+function game_over() {
+  window.clearTimeout(timeout);
+  ctx.fillText('Game over, your score: ' + score, width / 2, height / 2);
+}
+
 document.onload = init()
+document.getElementById('reset').onclick = function() {
+  welcome_screen = true;
+  clearTimeout(timeout)
+  init();
+}
