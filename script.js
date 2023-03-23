@@ -1,4 +1,9 @@
-import { Coordinates } from "/Coordinates.js";
+class Coordinates {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
 
 var canvas;
 var ctx; //uchwyt kontekstu tkaniny pozwalający na operowanie na niej
